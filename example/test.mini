@@ -1,0 +1,10 @@
+fn (i32) f (a (i32)) {
+    return a;
+}
+
+fn (i32) main () {
+    let c = f(f(f(f(f(f(f(f(f(242)))))))));
+    let v (u32) = 21;
+    let a = 10;
+    return v;
+}
