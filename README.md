@@ -1,2 +1,3 @@
-# soda-lang
-The soda programming language!
+# Soda Compiler
+
+Compiler for the Soda programming language.
