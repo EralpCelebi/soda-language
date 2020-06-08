@@ -1,11 +1,11 @@
 # ### Bases ### #
 import llvmlite.ir as ll
 
-from mini.analysis.state import State
-from mini.internals.casts import CastTo, deepcopy
-from mini.internals.checks import *
-from mini.internals.types import *
-from mini.internals.wrapper import InternalValue
+from soda.analysis.state import State
+from soda.internals.casts import CastTo, deepcopy
+from soda.internals.checks import *
+from soda.internals.types import *
+from soda.internals.wrapper import InternalValue
 
 
 # ### Derivatives & Others ### #
@@ -293,10 +293,14 @@ class ReturnNode:
 
             temp_type = temp_value.getWrappedType()
 
+            temp_return_value = temp_value
+
             if state.current_function_return_type == temp_type:
-                return state.builder.ret(temp_value.getLLVMValue())
+                return state.builder.ret(temp_return_value.getLLVMValue())
+            
             else:
-                state.error_handler("Value has wrong return type.", self.value.span)
+                temp_return_value = CastTo(state.current_function_return_type, temp_value, state, self.span)
+                return state.builder.ret(temp_return_value.getLLVMValue())
 
         else:
             state.builder.ret_void()
@@ -369,9 +373,9 @@ class FloatNode:
 
 class BoolNode:
     def __init__(self, value):
-        if value.getstr() is "true":
+        if value.getstr() == "true":
             self.value = True
-        elif value.getstr() is "false":
+        elif value.getstr() == "false":
             self.value = False
         else:
             self.value = bool(value.getstr())

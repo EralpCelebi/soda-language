@@ -1,4 +1,4 @@
-from mini.internals.wrapper import *
+from soda.internals.wrapper import *
 
 
 def CastTo(target, value, state, span):

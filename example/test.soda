@@ -1,0 +1,5 @@
+fn (i32) main () {
+    let v (u32) = 21;
+    let a = 10;
+    return v;
+}

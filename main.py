@@ -2,12 +2,12 @@ import llvmlite.binding as llvm
 import llvmlite.ir as ll
 from rply import LexingError, ParsingError
 
-from mini.analysis.lexer import Lexer
-from mini.analysis.parser import Parser
-from mini.internals.wrapper import InternalModuleLLVM
-from mini.utils.file_io import Read, Write
-from mini.utils.logger import setup_logger
-from mini.analysis.state import State
+from soda.analysis.lexer import Lexer
+from soda.analysis.parser import Parser
+from soda.internals.wrapper import InternalModuleLLVM
+from soda.utils.file_io import Read, Write
+from soda.utils.logger import setup_logger
+from soda.analysis.state import State
 
 from sys import argv
 

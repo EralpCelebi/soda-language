@@ -1,7 +1,7 @@
 from linecache import getline
 from colorama import Fore, Back, Style
 
-from mini.internals.types import types
+from soda.internals.types import types
 
 
 class State:

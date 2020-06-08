@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from mini.internals.types import *
+from soda.internals.types import *
 
 import llvmlite.ir as ll
 import llvmlite.binding as llvm

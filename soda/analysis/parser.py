@@ -3,7 +3,7 @@ import warnings
 from rply import ParserGenerator, Token
 from rply.errors import ParserGeneratorWarning
 
-from mini.generation.ast import *
+from soda.generation.ast import *
 
 
 class Parser:

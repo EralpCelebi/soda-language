@@ -1,6 +1,6 @@
 import llvmlite.ir as ll
 
-from mini.internals.wrapper import BaseType
+from soda.internals.wrapper import BaseType
 
 
 # --- Boolean --- #
