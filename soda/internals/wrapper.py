@@ -7,14 +7,17 @@ import llvmlite.binding as llvm
 
 
 class BaseType:
+    base_llvm_type = None
     llvm_type = None
     size_in_bits = 0
+    str_repr = ""
 
     def __init__(self, span=None, depth=0):
         self.pointer_depth = depth
         self.span = span
 
     def getLLVMType(self):
+        self.llvm_type = self.base_llvm_type
         if self.pointer_depth != 0:
             for _ in range(self.pointer_depth):
                 self.llvm_type = self.llvm_type.as_pointer()
@@ -22,7 +25,12 @@ class BaseType:
         return self.llvm_type
 
     def getLLVMBaseType(self):
-        return self.llvm_type
+        return self.base_llvm_type
+    
+    def getWrappedBaseType(self):
+        temp = deepcopy(self)
+        temp.setPointerDepth(0)
+        return temp
 
     def getSizeInBits(self):
         return self.size_in_bits
@@ -56,6 +64,9 @@ class BaseType:
     def __eq__(self, other):
         return type(self) == type(other) and \
             self.getPointerDepth() == other.getPointerDepth()
+    
+    def __str__(self):
+        return f"{self.pointer_depth * 'ptr '}{self.str_repr}"
 
 
 class InternalValue:
@@ -90,6 +101,9 @@ class InternalValue:
 
     def getLLVMBaseType(self):
         return self.wrapped_type.getLLVMBaseType()
+    
+    def getWrappedBaseType(self):
+        return self.wrapped_type.getWrappedBaseType()
 
     def getSizeInBits(self):
         return self.wrapped_type.getSizeInBits()
@@ -146,8 +160,9 @@ class InternalModuleLLVM:
         self.mod_pass_manager = llvm.create_module_pass_manager()
         llvm.create_pass_manager_builder().populate(self.mod_pass_manager)
 
-        self.module = ll.Module(name=str(state.current_file))
-        self.module.triple = llvm.get_default_triple()
+        self.module = ll.Module()
+        self.name = str(state.current_file)
+        self.triple = llvm.get_process_triple()
 
         state.module = self.module
 
@@ -157,37 +172,40 @@ class InternalModuleLLVM:
 
         result = self.mod_pass_manager.run(mod)
 
-        return str(mod)
+        mod.triple = self.triple
+        mod.name = self.name
 
+        self.output_ir = str(mod)
+        return self.output_ir
 
 def CreateSIntFromSize(size):
-    if size is 1:
+    if size == 1:
         return I8Type()
-    elif size is 2:
+    elif size == 2:
         return I16Type()
-    elif size is 4:
+    elif size == 4:
         return I32Type()
-    elif size is 8:
+    elif size == 8:
         return I64Type()
-    elif size is 16:
+    elif size == 16:
         return I128Type()
 
 
 def CreateUIntFromSize(size):
-    if size is 1:
+    if size == 1:
         return U8Type()
-    elif size is 2:
+    elif size == 2:
         return U16Type()
-    elif size is 4:
+    elif size == 4:
         return U32Type()
-    elif size is 8:
+    elif size == 8:
         return U64Type()
-    elif size is 16:
+    elif size == 16:
         return U128Type()
 
 
 def CreateFPFromSize(size):
-    if size is 4:
+    if size == 4:
         return F32Type()
-    elif size is 8:
+    elif size == 8:
         return F64Type()

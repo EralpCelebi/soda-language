@@ -284,15 +284,13 @@ class LetNode:
 
 class ReturnNode:
     def __init__(self, span, value):
-        self.span = span
+        self.span = span.getsourcepos()
         self.value = value
 
     def build(self, state):
         if self.value is not None:
             temp_value = self.value.build(state)
-
             temp_type = temp_value.getWrappedType()
-
             temp_return_value = temp_value
 
             if state.current_function_return_type == temp_type:
@@ -362,17 +360,20 @@ class AddressNode:
 
         # -- Checks -- #
 
-        if not IsNumber(temp_value):
+        if not IsNumber(temp_value.getWrappedType()):
             state.error_handler("Can't create reference from value.", self.span)
 
         # -- Checks -- #
 
-        temp_llvm_value = state.builder.alloca(temp_value.getLLVMType())
-        state.builder.store(temp_value.getLLVMValue(), temp_llvm_value)
+        temp_wanted_type = state.types["void"](depth=1) 
 
-        temp_value.addPointerDepth()
+        if len(state.wanted_types) > 0:
+            temp_wanted_type = state.wanted_types.pop()
 
-        temp = InternalValue(temp_value.getWrappedType(),
+        temp_llvm_value = state.builder.inttoptr(temp_value.getLLVMValue(),
+                                                 temp_wanted_type.getLLVMType())    
+
+        temp = InternalValue(temp_wanted_type,
                              llvm_value=temp_llvm_value)
 
         return temp
@@ -394,6 +395,7 @@ class VariableNode:
         if temp.isVariable():
             state.defined_variables[self.value].markUsed()
             temp_llvm_value = state.builder.load(temp.getLLVMValue())
+            temp.addPointerDepth(-1)
 
         else:
             state.defined_variables[self.value].markUsed()
@@ -413,7 +415,7 @@ class NumberNode:
         if len(state.wanted_types) != 0:
             # -- Checks -- #
             if IsNumber(state.wanted_types[-1]):
-                temp_value = InternalValue(wrapped_type=state.wanted_types.pop(),
+                temp_value = InternalValue(wrapped_type=state.wanted_types.pop().getWrappedBaseType(),
                                            python_value=self.value,
                                            span=self.span)
             else:
@@ -433,7 +435,7 @@ class FloatNode:
         if len(state.wanted_types) != 0:
             # -- Checks -- #
             if IsFloat(state.wanted_types[-1]):
-                temp_value = InternalValue(wrapped_type=state.wanted_types.pop(),
+                temp_value = InternalValue(wrapped_type=state.wanted_types.pop().getWrappedBaseType(),
                                            python_value=self.value,
                                            span=self.span)
             else:
@@ -458,7 +460,7 @@ class BoolNode:
         if len(state.wanted_types) != 0:
             # -- Checks -- #
             if IsBool(state.wanted_types[-1]):
-                temp_value = InternalValue(wrapped_type=state.wanted_types.pop(),
+                temp_value = InternalValue(wrapped_type=state.wanted_types.pop().getWrappedBaseType(),
                                            python_value=self.value,
                                            span=self.span)
             elif IsNumber(state.wanted_types[-1]):
@@ -466,7 +468,7 @@ class BoolNode:
                                            python_value=self.value,
                                            span=self.span)
 
-                temp_value = CastTo(state.wanted_types.pop(), temp_value, state, self.span)
+                temp_value = CastTo(state.wanted_types.pop().getWrappedBaseType(), temp_value, state, self.span)
             else:
                 state.error_handler("Usage of expression with a wrong type.", self.span)
             # -- Checks -- #
@@ -477,18 +479,19 @@ class BoolNode:
 # --- Type Node --- #
 
 class TypeNode:
-    def __init__(self, value, depth=0):
+    def __init__(self, value, depth=0, is_ptr=None):
         self.depth = depth
+        self.is_ptr = is_ptr
         self.value = value.getstr()
         self.span = value.getsourcepos()
 
-    def build(self, state, is_ptr=None):
+    def build(self, state):
         state.enter_type()
 
         temp = None
         
-        if is_ptr is not None:
-            is_ptr.build(state)
+        if self.is_ptr is not None:
+            self.is_ptr.build(state)
         
         if self.value not in state.types.keys():
             state.error_handler("Usage of unknown type.", self.span)
@@ -506,7 +509,11 @@ class PtrNode:
         self.nodes = nodes
     
     def build(self, state):
-        for node in self.nodes:
-            node.build(state)
+        if len(self.nodes) > 0:
+            for node in self.nodes:
+                node.build(state)
         else:
             state.current_pointer_depth += 1
+        
+        
+        
