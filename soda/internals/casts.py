@@ -2,7 +2,20 @@ from soda.internals.wrapper import *
 
 
 def CastTo(target, value, state, span):
-    temp = TypeCastTo(target, value, state, span)
+    temp = None
+    if target.isPointer() or value.isPointer():
+        if target.getPointerDepth() == value.getPointerDepth():
+            temp = PointerCastTo(target, value, state, span)
+        else:
+            state.error_handler(f"Can't cast {value.getWrappedType()} to "\
+                f"{target}", span)
+
+    elif not target.isPointer() and not value.isPointer():
+        temp = TypeCastTo(target, value, state, span)
+
+    else:
+        state.error_handler(f"Can't cast {value.getWrappedType()} to "\
+                f"{target}", span)
     return temp
 
 
@@ -126,5 +139,13 @@ def TypeCastTo(target, value, state, span):
     return temp
 
 
-def PointerCastTo(target, value, state):
-    pass
+def PointerCastTo(target, value, state, span):
+    temp = value
+    temp_llvm_value = None
+
+    if not target == value.getWrappedType():
+        temp_llvm_value = state.builder.bitcast(value.getLLVMValue(), target.getLLVMType())
+        temp = InternalValue(wrapped_type=target,
+                         llvm_value=temp_llvm_value)
+        
+    return temp

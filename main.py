@@ -35,4 +35,8 @@ except LexingError as e:
 except ParsingError as e:
     root_state.error_handler("Usage of unknown keywords / characters.", e.getsourcepos())
 
+
+
 Write(f"{splitext(root_state.current_file)[0]}.ll", module.build())
+
+

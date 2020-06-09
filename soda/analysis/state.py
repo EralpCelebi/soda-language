@@ -27,6 +27,8 @@ class State:
         self.current_call_arguments_llvm_values = []
         self.current_call_arguments_types = []
 
+        self.current_pointer_depth = 0
+
         self.defined_functions = {}
         self.defined_functions_argument_types = {}
 
@@ -60,6 +62,12 @@ class State:
         self.current_function_has_returned = False
         self.defined_variables = {}
         self.defined_variables = self.defined_globals
+    
+    def enter_type(self):
+        self.current_pointer_depth = 0
+    
+    def exit_type(self):
+        self.current_pointer_depth = 0
 
     def info_handler(self, value, span):
         self.logger.info(f"{Fore.WHITE}[{span.colno}:{span.lineno}] {Fore.BLUE} {value} {Fore.RESET}")

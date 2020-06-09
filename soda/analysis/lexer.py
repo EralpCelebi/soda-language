@@ -15,6 +15,11 @@ class Lexer:
         self.lg.add("TRUE", r"true")
         self.lg.add("FALSE", r"false")
 
+        self.lg.add("PTR", r"ptr")
+        self.lg.add("REF", r"ref")
+        self.lg.add("DEREF", r"deref")
+        self.lg.add("ADDR", r"addr")
+
         # --- Punctuations --- #
         self.lg.add("(", r"\(")
         self.lg.add(")", r"\)")
