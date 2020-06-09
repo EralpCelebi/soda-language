@@ -7,7 +7,7 @@ assignees: EralpCelebi
 
 ---
 
-- description -
+Description goes here,
  
 ### To-Do 
 
@@ -20,5 +20,9 @@ assignees: EralpCelebi
 - [ ] Implement Util
 
 - [ ] Implement Docs
+    - [ ] Add usage documentation.
+    - [ ] Add detailed information.
 
 ### Expectations
+* Expecting this to happen
+* Expecting that to happen
