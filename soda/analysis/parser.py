@@ -15,6 +15,7 @@ class Parser:
                     "{", "}", ",",
                     "NUMBER", "FLOAT",
                     "FALSE", "TRUE",
+                    "REF","DEREF","ADDR","PTR",
                     "IDENTIFIER"],
             precedence=[
                 ("left", ["NUMBER", "FLOAT"]),
@@ -22,11 +23,12 @@ class Parser:
                 ("left", [",", ";"]),
                 ("left", ["FN", "LET", "RET"]),
                 ("left", ["="]),
+                ("right", ["REF", "DEREF", "ADDR"]),
                 ("left", ["{", "}"]),
                 ("left", ["(", ")"]),
 
             ],
-            cache_id="mini_cache"
+            cache_id="soda_cache"
         )
 
         self.state = state
@@ -130,6 +132,18 @@ class Parser:
         @self.pg.production("statement : LET IDENTIFIER type ;")
         def statements_let(p):
             return LetNode(p[1], p[2], None)
+        
+        @self.pg.production("expr : REF expr")
+        def expr_refrence(p):
+            return RefNode(p[0], p[1])
+
+        @self.pg.production("expr : DEREF expr")
+        def expr_derefrence(p):
+            return DerefNode(p[0], p[1])
+        
+        @self.pg.production("expr : ADDR expr")
+        def expr_refrence(p):
+            return AddressNode(p[0], p[1])
 
         @self.pg.production("expr : ( expr )")
         def expr_paren_expr(p):
@@ -159,6 +173,18 @@ class Parser:
         @self.pg.production("type : ( IDENTIFIER )")
         def type_identifier(p):
             return TypeNode(p[1])
+        
+        @self.pg.production("type : ( ptrs IDENTIFIER )")
+        def ptrtype_identifier(p):
+            return TypeNode(p[2], is_ptr=p[1])
+        
+        @self.pg.production("ptrs : ptrs ptrs")
+        @self.pg.production("ptrs : PTR")
+        def ptrs_count(p):
+            if len(p) != 1:
+                return PtrNode(p)
+            else:
+                return PtrNode([])
 
         @self.pg.error
         def error_handler(token):

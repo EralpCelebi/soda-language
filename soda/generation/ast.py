@@ -306,6 +306,78 @@ class ReturnNode:
             state.builder.ret_void()
 
 
+# --- Pointers --- #
+
+class RefNode:
+    def __init__(self, span, value):
+        self.span = span.getsourcepos()
+        self.value = value
+    
+    def build(self, state):
+        temp_value = self.value.build(state)
+
+        temp_llvm_value = state.builder.alloca(temp_value.getLLVMType())
+        state.builder.store(temp_value.getLLVMValue(), temp_llvm_value)
+
+        temp_value.addPointerDepth()
+
+        temp = InternalValue(temp_value.getWrappedType(),
+                             llvm_value=temp_llvm_value)
+
+        return temp
+
+
+class DerefNode:
+    def __init__(self, span, value):
+        self.span = span.getsourcepos()
+        self.value = value
+    
+    def build(self, state):
+        temp_value = self.value.build(state)
+
+        # -- Checks -- #
+
+        if not temp_value.isPointer():
+            state.error_handler("Can't derefrence non-refrence value.", self.span)
+
+        # -- Checks -- #
+
+        temp_llvm_value = state.builder.load(temp_value.getLLVMValue())
+
+        temp_value.addPointerDepth(-1)
+
+        temp = InternalValue(temp_value.getWrappedType(),
+                             llvm_value=temp_llvm_value)
+
+        return temp
+
+
+class AddressNode:
+    def __init__(self, span, value):
+        self.span = span.getsourcepos()
+        self.value = value
+    
+    def build(self, state):
+        temp_value = self.value.build(state)
+
+        # -- Checks -- #
+
+        if not IsNumber(temp_value):
+            state.error_handler("Can't create reference from value.", self.span)
+
+        # -- Checks -- #
+
+        temp_llvm_value = state.builder.alloca(temp_value.getLLVMType())
+        state.builder.store(temp_value.getLLVMValue(), temp_llvm_value)
+
+        temp_value.addPointerDepth()
+
+        temp = InternalValue(temp_value.getWrappedType(),
+                             llvm_value=temp_llvm_value)
+
+        return temp
+
+
 # --- Base Type Nodes --- #
 
 class VariableNode:
@@ -410,8 +482,31 @@ class TypeNode:
         self.value = value.getstr()
         self.span = value.getsourcepos()
 
-    def build(self, state):
+    def build(self, state, is_ptr=None):
+        state.enter_type()
+
+        temp = None
+        
+        if is_ptr is not None:
+            is_ptr.build(state)
+        
         if self.value not in state.types.keys():
             state.error_handler("Usage of unknown type.", self.span)
         else:
-            return state.types[self.value](span=self.span)
+            temp = state.types[self.value](span=self.span)
+            temp.setPointerDepth(state.current_pointer_depth)
+        
+        state.exit_type()
+
+        return temp
+
+
+class PtrNode:
+    def __init__(self, nodes):
+        self.nodes = nodes
+    
+    def build(self, state):
+        for node in self.nodes:
+            node.build(state)
+        else:
+            state.current_pointer_depth += 1
