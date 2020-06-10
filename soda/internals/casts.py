@@ -16,6 +16,7 @@ def CastTo(target, value, state, span):
     else:
         state.error_handler(f"Can't cast {value.getWrappedType()} to "\
                 f"{target}", span)
+
     return temp
 
 
@@ -141,7 +142,6 @@ def TypeCastTo(target, value, state, span):
 
 def PointerCastTo(target, value, state, span):
     temp = value
-    temp_llvm_value = None
 
     if not target == value.getWrappedType():
         temp_llvm_value = state.builder.bitcast(value.getLLVMValue(), target.getLLVMType())

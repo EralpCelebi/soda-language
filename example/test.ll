@@ -1,4 +1,4 @@
-; ModuleID = '.\example\test.soda'
+; ModuleID = 'example/test.soda'
 source_filename = "<string>"
 target triple = "i686-pc-windows-msvc"
 

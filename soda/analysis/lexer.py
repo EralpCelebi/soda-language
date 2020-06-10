@@ -11,9 +11,13 @@ class Lexer:
         self.lg.add("FN", r"fn")
         self.lg.add("RET", r"return")
 
+        self.lg.add("TO", r"to")
+
         # --- Reserved --- #
         self.lg.add("TRUE", r"true")
         self.lg.add("FALSE", r"false")
+
+        # --- Modifiers --- #
 
         self.lg.add("PTR", r"ptr")
         self.lg.add("REF", r"ref")
