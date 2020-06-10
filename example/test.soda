@@ -1,5 +1,5 @@
 fn (i32) main () {
-    let v (ptr u32) = addr 800;
-    let a (i32) = deref v;
+    let v = addr 800;
+    let a (i32) = deref v to (ptr i32);
     return a;
 }

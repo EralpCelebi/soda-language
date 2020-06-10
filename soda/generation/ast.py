@@ -173,9 +173,6 @@ class CallNode:
         state.current_call_arguments_types = temp_argument_types
         self.node.build(state)
 
-        temp = None
-        temp_wanted_type = None
-
         if len(state.wanted_types) > 0:
             temp_wanted_type = state.wanted_types.pop()
 
@@ -304,6 +301,21 @@ class ReturnNode:
             state.builder.ret_void()
 
 
+# --- Casting --- #
+
+class CastNode:
+    def __init__(self, span, value, target):
+        self.span = span.getsourcepos()
+        self.value = value
+        self.target = target
+
+    def build(self, state):
+        temp_value = self.value.build(state)
+        temp_target = self.target.build(state)
+
+        return CastTo(temp_target, temp_value, state, self.span)
+
+
 # --- Pointers --- #
 
 class RefNode:
@@ -338,6 +350,9 @@ class DerefNode:
         if not temp_value.isPointer():
             state.error_handler("Can't derefrence non-refrence value.", self.span)
 
+        if isinstance(temp_value.getWrappedType(), VoidType):
+            state.error_handler("Can't dereference void type without a cast.", self.span)
+
         # -- Checks -- #
 
         temp_llvm_value = state.builder.load(temp_value.getLLVMValue())
@@ -365,7 +380,7 @@ class AddressNode:
 
         # -- Checks -- #
 
-        temp_wanted_type = state.types["void"](depth=1) 
+        temp_wanted_type = state.types["void"](depth=1)
 
         if len(state.wanted_types) > 0:
             temp_wanted_type = state.wanted_types.pop()
@@ -514,6 +529,3 @@ class PtrNode:
                 node.build(state)
         else:
             state.current_pointer_depth += 1
-        
-        
-        

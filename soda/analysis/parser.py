@@ -15,6 +15,7 @@ class Parser:
                     "{", "}", ",",
                     "NUMBER", "FLOAT",
                     "FALSE", "TRUE",
+                    "TO",
                     "REF","DEREF","ADDR","PTR",
                     "IDENTIFIER"],
             precedence=[
@@ -24,6 +25,7 @@ class Parser:
                 ("left", ["FN", "LET", "RET"]),
                 ("left", ["="]),
                 ("right", ["REF", "DEREF", "ADDR"]),
+                ("left", ["TO"]),
                 ("left", ["{", "}"]),
                 ("left", ["(", ")"]),
 
@@ -132,6 +134,10 @@ class Parser:
         @self.pg.production("statement : LET IDENTIFIER type ;")
         def statements_let(p):
             return LetNode(p[1], p[2], None)
+
+        @self.pg.production("expr : expr TO type")
+        def expr_casting(p):
+            return CastNode(p[1], p[0], p[2])
         
         @self.pg.production("expr : REF expr")
         def expr_refrence(p):
